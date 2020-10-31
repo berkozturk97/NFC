@@ -7,8 +7,8 @@ import Paragraph from '../components/Paragraph';
 
 const HomeScreen = ({ navigation }) => (
   <Background>
-    <Logo />
-    <Header>Login Template</Header>
+   {/* <Logo />*/}
+    <Header>SmartLock</Header>
 
     <Paragraph>
       The easiest way to start with your amazing application.

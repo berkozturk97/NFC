@@ -8,7 +8,7 @@ const styles = StyleSheet.create({
   text: {
     fontSize: 16,
     lineHeight: 26,
-    color: theme.colors.secondary,
+    color: theme.colors.grey,
     textAlign: 'center',
     marginBottom: 14,
   },

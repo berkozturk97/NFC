@@ -25,7 +25,10 @@ class Dashboard extends React.Component {
     }
   }
   componentDidMount() {
-    NfcManager.start();
+    NfcManager.start((a) => {
+      console.warn(a)
+    });
+
     NfcManager.setEventListener(NfcEvents.DiscoverTag, tag => {
       console.warn('Card ID:', tag.id);
       this.setState({ log: "Card ID: " + tag.id })

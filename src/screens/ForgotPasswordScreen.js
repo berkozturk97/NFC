@@ -27,7 +27,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     <Background>
       <BackButton goBack={() => navigation.navigate('LoginScreen')} />
 
-      <Logo />
+   {/* <Logo />*/}
 
       <Header>Restore Password</Header>
 
