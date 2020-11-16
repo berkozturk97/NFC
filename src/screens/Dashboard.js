@@ -10,96 +10,97 @@ import {
   Alert
 } from 'react-native';
 import Background from '../components/Background';
-import Logo from '../components/Logo';
 import Header from '../components/Header';
-import Paragraph from '../components/Paragraph';
 import Button from '../components/Button';
-import NfcManager, { NfcTech, NfcEvents } from 'react-native-nfc-manager';
+import NfcManager, { NfcTech, NfcEvents, Ndef, NfcAdapter } from 'react-native-nfc-manager';
+import ToastExample from '../components/NFCManager';
+import Global from '../util/Global';
+import FancyModal from '../components/FancyModal';
 
 class Dashboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       log: "Ready...",
-      text: ""
+      text: "",
+      isVisible: false,
     }
   }
   componentDidMount() {
     NfcManager.start((a) => {
       console.warn(a)
     });
-
-    NfcManager.setEventListener(NfcEvents.DiscoverTag, tag => {
-      console.warn('Card ID:', tag.id);
-      this.setState({ log: "Card ID: " + tag.id })
-      NfcManager.setAlertMessageIOS('I got your tag!');
-      NfcManager.unregisterTagEvent().catch(() => 0);
-    });
+    if (Platform.OS === 'android') {
+      NfcManager.getLaunchTagEvent()
+        .then(tag => {
+          console.warn('launch tag', tag);
+          if (tag) {
+            this.setState({ tag });
+          }
+        })
+        .catch(err => {
+          console.log(err);
+        })
+      NfcManager.isEnabled()
+        .then(enabled => {
+          this.setState({ enabled });
+        })
+        .catch(err => {
+          console.log(err);
+        })
+    }
   }
 
   componentWillUnmount() {
     this._cleanUp();
   }
 
-  _cancel = () => {
-    NfcManager.unregisterTagEvent().catch(() => 0);
-    this.setState({ log: "Ready.." })
-  }
-
-  _test = async () => {
-    try {
-      await NfcManager.registerTagEvent();
-      this.setState({ log: "You can read now.." })
-    } catch (ex) {
-      console.warn('ex', ex);
-
-      NfcManager.unregisterTagEvent().catch(() => 0);
-    }
-  }
-
   _cleanUp = () => {
     NfcManager.cancelTechnologyRequest().catch(() => 0);
-    NfcManager.setEventListener(NfcEvents.DiscoverTag, null);
     NfcManager.unregisterTagEvent().catch(() => 0);
+    NfcManager.setNdefPushMessage(null)
+      .then(() => console.warn('beam cancelled'))
+      .catch(err => console.warn(err))
     this.setState({ log: "Ready.." })
   }
 
 
-  onChangeText = (text) => {
-    this.setState({
-      text
-    })
+  deneme = () => {
+    //ToastExample.createNdefMessage("NfcManager")
+    let request = {
+      //userId: Global.USER._id,
+      userToken: Global.USER_TOKEN
+    }
+    console.warn(request)
+    let bytes = Ndef.encodeMessage([Ndef.textRecord(JSON.stringify(request))]);
+
+    NfcManager.setNdefPushMessage(bytes)
+      .then(() => console.warn('ready to beam'))
+      .catch(err => console.warn(err))
+
+    this.setState({ isVisible: true })
   }
 
   render() {
     return (
       <Background>
-
         <Header>NFC</Header>
         <View style={{ height: 100 }}></View>
 
-        {/* <TextInput
-          style={styles.textInput}
-          onChangeText={this.onChangeText}
-          autoCompleteType="off"
-          autoCapitalize="none"
-          autoCorrect={false}
-          placeholderTextColor="#888888"
-          placeholder="Enter text here" />
-
-        <Button mode="outlined" onPress={this.writeData}>
-          Write
-        </Button>*/}
-        <Button mode="outlined" onPress={this._test}>
-          Read
+        <Button mode="outlined" onPress={this.deneme}>
+          Open Door
       </Button>
-        <Button mode="outlined" onPress={this._cancel}>
+        <Button mode="outlined" onPress={this._cleanUp}>
           Cancel
       </Button>
-
         <View style={styles.log}>
           <Text>{this.state.log}</Text>
         </View>
+        <FancyModal isVisible={this.state.isVisible}
+          onPress={() => {
+            this._cleanUp();
+            this.setState({ isVisible: false })
+          }} />
       </Background>
     )
   }
@@ -150,7 +151,40 @@ const styles = StyleSheet.create({
 })
 
 export default memo(Dashboard);
+/*
+_runTest = textToWrite => {
+    const cleanUp = () => {
+      this.setState({ isTestRunning: false });
+      NfcManager.closeTechnology()
+      NfcManager.unregisterTagEvent();
+    }
 
+    const parseText = (tag) => {
+      if (tag.ndefMessage) {
+        console.warn(tag.ndefMessage)
+        return NdefParser.parseText(tag.ndefMessage[0]);
+      } else {
+        console.warn("yok")
+        return null;
+      }
+
+    }
+    NfcManager.registerTagEvent(tag => console.warn(tag))
+      .then(() => NfcManager.requestTechnology(NfcTech.Ndef))
+      .then(() => NfcManager.getNdefMessage())
+      .then(tag => {
+        let parsedText = parseText(tag);
+        this.setState({ tag, parsedText })
+        console.log(parsedText)
+      })
+      .then(() => NfcManager.writeNdefMessage(buildTextPayload(textToWrite)))
+      .then(cleanUp)
+      .catch(err => {
+        console.warn(err);
+        cleanUp();
+      })
+  }
+*/
 
 /*
  readData = async () => {

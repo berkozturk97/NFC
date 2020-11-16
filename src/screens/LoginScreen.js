@@ -8,12 +8,14 @@ import TextInput from '../components/TextInput';
 import BackButton from '../components/BackButton';
 import { theme } from '../core/theme';
 import { emailValidator, passwordValidator } from '../core/utils';
+import { login } from '../api/UserApi';
+import Global from '../util/Global';
 
 const LoginScreen = ({ navigation }) => {
-  const [email, setEmail] = useState({ value: 'wqerqwe@hotmail.com', error: '' });
-  const [password, setPassword] = useState({ value: 'qewrqwer', error: '' });
+  const [email, setEmail] = useState({ value: '', error: '' });
+  const [password, setPassword] = useState({ value: '', error: '' });
 
-  const _onLoginPressed = () => {
+  const _onLoginPressed = async () => {
     const emailError = emailValidator(email.value);
     const passwordError = passwordValidator(password.value);
 
@@ -21,16 +23,25 @@ const LoginScreen = ({ navigation }) => {
       setEmail({ ...email, error: emailError });
       setPassword({ ...password, error: passwordError });
       return;
+    } else {
+      let body = { email:email.value, password:password.value };
+      let responseData = await login({ body });
+      if(responseData.userToken){
+        console.warn(responseData)
+        Global.USER_TOKEN = responseData.userToken;
+        Global.USER = responseData.user;
+        navigation.navigate('Dashboard');
+      }
     }
 
-    navigation.navigate('Dashboard');
+  //  navigation.navigate('Dashboard');
   };
 
   return (
     <Background>
       <BackButton goBack={() => navigation.navigate('HomeScreen')} />
 
-   {/* <Logo />*/}
+      {/* <Logo />*/}
       <Header>Welcome back.</Header>
 
       <TextInput

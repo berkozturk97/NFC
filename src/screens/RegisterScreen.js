@@ -12,13 +12,14 @@ import {
   passwordValidator,
   nameValidator,
 } from '../core/utils';
+import { register } from '../api/UserApi';
 
 const RegisterScreen = ({ navigation }) => {
   const [name, setName] = useState({ value: '', error: '' });
   const [email, setEmail] = useState({ value: '', error: '' });
   const [password, setPassword] = useState({ value: '', error: '' });
 
-  const _onSignUpPressed = () => {
+  const _onSignUpPressed = async () => {
     const nameError = nameValidator(name.value);
     const emailError = emailValidator(email.value);
     const passwordError = passwordValidator(password.value);
@@ -29,9 +30,20 @@ const RegisterScreen = ({ navigation }) => {
       setPassword({ ...password, error: passwordError });
       return;
     }
+    else {
+      let body = {
+        fullName: name.value,
+        email: email.value,
+        password: password.value
+      };
+      let responseData = await register({ body });
+      if (responseData !== null) {
+        console.warn(responseData)
+      }
 
-    navigation.navigate('Dashboard');
-  };
+      navigation.navigate('LoginScreen');
+    };
+  }
 
   return (
     <Background>
@@ -42,7 +54,7 @@ const RegisterScreen = ({ navigation }) => {
       <Header>Create Account</Header>
 
       <TextInput
-        label="Name"
+        label="Full Name"
         returnKeyType="next"
         value={name.value}
         onChangeText={text => setName({ value: text, error: '' })}
