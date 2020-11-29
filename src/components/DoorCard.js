@@ -1,9 +1,17 @@
 import React, {memo} from 'react';
-import {StyleSheet} from 'react-native';
+import {StyleSheet, Dimensions} from 'react-native';
 import {Button as PaperButton} from 'react-native-paper';
 import {theme} from '../core/theme';
+const {width} = Dimensions.get('window');
 
-const Button = ({mode, style, children, ...props}) => (
+const DoorCard = ({
+  doorName,
+  doorItem,
+  mode = 'outlined',
+  style,
+  children,
+  ...props
+}) => (
   <PaperButton
     style={[
       styles.button,
@@ -13,20 +21,24 @@ const Button = ({mode, style, children, ...props}) => (
     labelStyle={styles.text}
     mode={mode}
     {...props}>
-    {children}
+    {doorName}
   </PaperButton>
 );
 
 const styles = StyleSheet.create({
   button: {
-    width: '100%',
+    width: width / 2.5,
+    height: width / 2.5,
     marginVertical: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+    margin: 10,
   },
   text: {
     fontWeight: 'bold',
-    fontSize: 15,
+    fontSize: 20,
     lineHeight: 26,
   },
 });
 
-export default memo(Button);
+export default memo(DoorCard);

@@ -1,23 +1,19 @@
-import React, { memo, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, {memo, useState} from 'react';
+import {View, Text, StyleSheet, TouchableOpacity} from 'react-native';
 import Background from '../components/Background';
 import Logo from '../components/Logo';
 import Header from '../components/Header';
 import Button from '../components/Button';
 import TextInput from '../components/TextInput';
 import BackButton from '../components/BackButton';
-import { theme } from '../core/theme';
-import {
-  emailValidator,
-  passwordValidator,
-  nameValidator,
-} from '../core/utils';
-import { register } from '../api/UserApi';
+import {theme} from '../core/theme';
+import {emailValidator, passwordValidator, nameValidator} from '../core/utils';
+import {register} from '../api/UserApi';
 
-const RegisterScreen = ({ navigation }) => {
-  const [name, setName] = useState({ value: '', error: '' });
-  const [email, setEmail] = useState({ value: '', error: '' });
-  const [password, setPassword] = useState({ value: '', error: '' });
+const RegisterScreen = ({navigation}) => {
+  const [name, setName] = useState({value: '', error: ''});
+  const [email, setEmail] = useState({value: '', error: ''});
+  const [password, setPassword] = useState({value: '', error: ''});
 
   const _onSignUpPressed = async () => {
     const nameError = nameValidator(name.value);
@@ -25,25 +21,26 @@ const RegisterScreen = ({ navigation }) => {
     const passwordError = passwordValidator(password.value);
 
     if (emailError || passwordError || nameError) {
-      setName({ ...name, error: nameError });
-      setEmail({ ...email, error: emailError });
-      setPassword({ ...password, error: passwordError });
+      setName({...name, error: nameError});
+      setEmail({...email, error: emailError});
+      setPassword({...password, error: passwordError});
       return;
-    }
-    else {
+    } else {
       let body = {
         fullName: name.value,
         email: email.value,
-        password: password.value
+        password: password.value,
       };
-      let responseData = await register({ body });
+      let responseData = await register({body});
       if (responseData !== null) {
-        console.warn(responseData)
+        console.warn(responseData);
       }
-
-      navigation.navigate('LoginScreen');
-    };
-  }
+      navigation.reset({
+        index: 0,
+        routes: [{name: 'LoginScreen'}],
+      });
+    }
+  };
 
   return (
     <Background>
@@ -57,7 +54,7 @@ const RegisterScreen = ({ navigation }) => {
         label="Full Name"
         returnKeyType="next"
         value={name.value}
-        onChangeText={text => setName({ value: text, error: '' })}
+        onChangeText={(text) => setName({value: text, error: ''})}
         error={!!name.error}
         errorText={name.error}
       />
@@ -66,7 +63,7 @@ const RegisterScreen = ({ navigation }) => {
         label="Email"
         returnKeyType="next"
         value={email.value}
-        onChangeText={text => setEmail({ value: text, error: '' })}
+        onChangeText={(text) => setEmail({value: text, error: ''})}
         error={!!email.error}
         errorText={email.error}
         autoCapitalize="none"
@@ -79,7 +76,7 @@ const RegisterScreen = ({ navigation }) => {
         label="Password"
         returnKeyType="done"
         value={password.value}
-        onChangeText={text => setPassword({ value: text, error: '' })}
+        onChangeText={(text) => setPassword({value: text, error: ''})}
         error={!!password.error}
         errorText={password.error}
         secureTextEntry

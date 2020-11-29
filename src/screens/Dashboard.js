@@ -1,4 +1,4 @@
-import React, { memo } from 'react';
+import React, {memo} from 'react';
 import {
   View,
   Text,
@@ -7,47 +7,48 @@ import {
   SafeAreaView,
   StyleSheet,
   TextInput,
-  Alert
+  Alert,
+  FlatList,
 } from 'react-native';
 import Background from '../components/Background';
 import Header from '../components/Header';
 import Button from '../components/Button';
-import NfcManager, { NfcTech, NfcEvents, Ndef, NfcAdapter } from 'react-native-nfc-manager';
-import ToastExample from '../components/NFCManager';
+import NfcManager, {NfcEvents, Ndef} from 'react-native-nfc-manager';
 import Global from '../util/Global';
 import FancyModal from '../components/FancyModal';
+import DoorCard from '../components/DoorCard';
+import {writeLog} from '../api/UserApi';
 
 class Dashboard extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      log: "Ready...",
-      text: "",
+      log: 'Ready...',
+      text: '',
       isVisible: false,
-    }
+    };
   }
   componentDidMount() {
     NfcManager.start((a) => {
-      console.warn(a)
+      console.warn(a);
+    });
+    NfcManager.setEventListener(NfcEvents.DiscoverTag, (tag) => {
+      console.warn('tag', tag);
+      NfcManager.setAlertMessageIOS('I got your tag!');
+      NfcManager.unregisterTagEvent().catch(() => 0);
     });
     if (Platform.OS === 'android') {
       NfcManager.getLaunchTagEvent()
-        .then(tag => {
-          console.warn('launch tag', tag);
+        .then((tag) => {
+          console.warn('launch tag', tag.payload);
           if (tag) {
-            this.setState({ tag });
+            this.setState({tag});
           }
         })
-        .catch(err => {
+        .catch((err) => {
           console.log(err);
-        })
-      NfcManager.isEnabled()
-        .then(enabled => {
-          this.setState({ enabled });
-        })
-        .catch(err => {
-          console.log(err);
-        })
+        });
+      this.isEnable();
     }
   }
 
@@ -55,54 +56,83 @@ class Dashboard extends React.Component {
     this._cleanUp();
   }
 
+  isEnable = () => {
+    NfcManager.isEnabled()
+      .then((enabled) => {
+        if (enabled === false) {
+          NfcManager.goToNfcSetting();
+        } else {
+          this.setState({enabled});
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+        this.setState({enabled: false});
+        NfcManager.goToNfcSetting();
+      });
+  };
+
   _cleanUp = () => {
     NfcManager.cancelTechnologyRequest().catch(() => 0);
     NfcManager.unregisterTagEvent().catch(() => 0);
     NfcManager.setNdefPushMessage(null)
       .then(() => console.warn('beam cancelled'))
-      .catch(err => console.warn(err))
-    this.setState({ log: "Ready.." })
-  }
+      .catch((err) => console.warn(err));
+    this.setState({log: 'Ready..'});
+  };
 
+  openDoor = async (doorId) => {
+    let body = {
+      userId: Global.USER._id,
+      doorId,
+    };
+    let responseData = await writeLog({body});
+    if (responseData !== null) {
+      let request = {
+        doorId,
+        willOpen: true,
+      };
+      console.warn(request);
+      let bytes = Ndef.encodeMessage([
+        Ndef.textRecord(JSON.stringify(request)),
+      ]);
 
-  deneme = () => {
-    //ToastExample.createNdefMessage("NfcManager")
-    let request = {
-      //userId: Global.USER._id,
-      userToken: Global.USER_TOKEN
+      NfcManager.setNdefPushMessage(bytes)
+        .then(() => console.warn('ready to beam'))
+        .catch((err) => console.warn(err));
+
+      this.setState({isVisible: true});
     }
-    console.warn(request)
-    let bytes = Ndef.encodeMessage([Ndef.textRecord(JSON.stringify(request))]);
+  };
 
-    NfcManager.setNdefPushMessage(bytes)
-      .then(() => console.warn('ready to beam'))
-      .catch(err => console.warn(err))
-
-    this.setState({ isVisible: true })
-  }
+  renderDoorItem = ({item, index}) => (
+    <DoorCard
+      doorName={item.doorName}
+      doorItem={item}
+      onPress={() => this.openDoor(item._id)}
+    />
+  );
 
   render() {
     return (
       <Background>
-        <Header>NFC</Header>
-        <View style={{ height: 100 }}></View>
-
-        <Button mode="outlined" onPress={this.deneme}>
-          Open Door
-      </Button>
-        <Button mode="outlined" onPress={this._cleanUp}>
-          Cancel
-      </Button>
-        <View style={styles.log}>
-          <Text>{this.state.log}</Text>
-        </View>
-        <FancyModal isVisible={this.state.isVisible}
+        <Header>{Global.USER.fullName}</Header>
+        <Header color={'white'}>Avaliable Doors</Header>
+        <FlatList
+          data={Global.PERMISSIONS}
+          keyExtractor={(item, index) => index}
+          renderItem={this.renderDoorItem}
+          numColumns={2}
+        />
+        <FancyModal
+          isVisible={this.state.isVisible}
           onPress={() => {
             this._cleanUp();
-            this.setState({ isVisible: false })
-          }} />
+            this.setState({isVisible: false});
+          }}
+        />
       </Background>
-    )
+    );
   }
 }
 
@@ -118,7 +148,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     height: 50,
     textAlign: 'center',
-    color: 'black'
+    color: 'black',
   },
   buttonWrite: {
     marginLeft: 20,
@@ -128,7 +158,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
-    backgroundColor: '#9D2235'
+    backgroundColor: '#9D2235',
   },
   buttonRead: {
     marginLeft: 20,
@@ -137,18 +167,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 8,
-    backgroundColor: '#006C5B'
+    backgroundColor: '#006C5B',
   },
   buttonText: {
-    color: '#ffffff'
+    color: '#ffffff',
   },
   log: {
     marginTop: 30,
     height: 50,
     justifyContent: 'center',
     alignItems: 'center',
-  }
-})
+  },
+});
 
 export default memo(Dashboard);
 /*

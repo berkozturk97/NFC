@@ -1,5 +1,5 @@
-import { createAppContainer } from 'react-navigation';
-import { createStackNavigator } from 'react-navigation-stack';
+import {createAppContainer} from 'react-navigation';
+import {createStackNavigator} from 'react-navigation-stack';
 
 import {
   HomeScreen,
@@ -20,7 +20,7 @@ const Router = createStackNavigator(
   {
     initialRouteName: 'HomeScreen',
     headerMode: 'none',
-  }
+  },
 );
 
 export default createAppContainer(Router);
